@@ -1,0 +1,98 @@
+/* Reset some styles */
+body, html {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: #f4f6f8;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Navbar Design */
+.custom-navbar {
+    background: linear-gradient(90deg, #c6a7ff, #ff66b2); /* Lightened gradient */
+    padding: 15px 30px;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 28px;
+    color: #fff !important;
+}
+
+.nav-link {
+    color: #ffffff !important;
+    font-size: 16px;
+    margin-left: 20px;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #d1d8ff !important;
+}
+
+/* Logout Button Special Style */
+.btn-logout {
+    background: #ff4b5c;
+    padding: 8px 18px;
+    border-radius: 8px;
+    margin-left: 15px;
+    font-weight: 500;
+    color: #ffffff !important;
+    transition: background 0.3s ease;
+}
+
+.btn-logout:hover {
+    background: #ff1e36;
+}
+
+/* Register container */
+.register-container {
+    background-color: #fff;
+    padding: 35px;
+    max-width: 650px;
+    margin: 40px auto;
+    border-radius: 16px;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    border-top: 5px solid #ff66b2;
+}
+
+/* Fields container */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #333;
+    font-size: 15px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    border-color: #ff66b2;
+    outline: none;
+}
+
+/* Responsive navbar */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 24px;
+    }
+    .nav-link {
+        margin-left: 10px;
+        font-size: 14px;
+    }
+}
