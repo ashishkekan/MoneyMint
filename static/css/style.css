@@ -1,98 +1,124 @@
 /* Reset some styles */
 body, html {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    background: #f4f6f8;
-    font-family: 'Poppins', sans-serif;
+    margin: 0; /* Remove default margin */
+    padding: 0; /* Remove default padding */
+    min-height: 100vh; /* Ensure full viewport height */
+    background: #f4f6f8; /* Set a light background color */
+    font-family: 'Poppins', sans-serif; /* Set a clean and modern font */
 }
 
 /* Navbar Design */
 .custom-navbar {
-    background: linear-gradient(90deg, #c6a7ff, #ff66b2); /* Lightened gradient */
-    padding: 15px 30px;
-    border-bottom-left-radius: 15px;
-    border-bottom-right-radius: 15px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background: linear-gradient(90deg, #c6a7ff, #ff66b2); /* Lightened gradient background for navbar */
+    padding: 15px 30px; /* Add padding for spacing around the navbar */
+    border-bottom-left-radius: 15px; /* Rounded bottom left corner */
+    border-bottom-right-radius: 15px; /* Rounded bottom right corner */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Slight shadow for depth */
 }
 
 .navbar-brand {
-    font-weight: bold;
-    font-size: 28px;
-    color: #fff !important;
+    font-weight: bold; /* Make the brand text bold */
+    font-size: 28px; /* Set the font size of the brand name */
+    color: #fff !important; /* White color for brand name */
 }
 
 .nav-link {
-    color: #ffffff !important;
-    font-size: 16px;
-    margin-left: 20px;
-    transition: color 0.3s ease;
+    color: #ffffff !important; /* Set white color for navbar links */
+    font-size: 16px; /* Set font size for navbar links */
+    margin-left: 20px; /* Add left margin for spacing between links */
+    transition: color 0.3s ease; /* Smooth color transition on hover */
 }
 
 .nav-link:hover {
-    color: #d1d8ff !important;
+    color: #d1d8ff !important; /* Change color on hover to light blue */
 }
 
 /* Logout Button Special Style */
 .btn-logout {
-    background: #ff4b5c;
-    padding: 8px 18px;
-    border-radius: 8px;
-    margin-left: 15px;
-    font-weight: 500;
-    color: #ffffff !important;
-    transition: background 0.3s ease;
+    background: #ff4b5c; /* Set a red background color for logout button */
+    padding: 8px 18px; /* Add padding around the button text */
+    border-radius: 8px; /* Round the corners of the button */
+    margin-left: 15px; /* Add left margin for spacing */
+    font-weight: 500; /* Set font weight to medium */
+    color: #ffffff !important; /* White color for text */
+    transition: background 0.3s ease; /* Smooth background color transition on hover */
 }
 
 .btn-logout:hover {
-    background: #ff1e36;
+    background: #ff1e36; /* Change to a darker red on hover */
 }
 
 /* Register container */
 .register-container {
-    background-color: #fff;
-    padding: 35px;
-    max-width: 650px;
-    margin: 40px auto;
-    border-radius: 16px;
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
-    border-top: 5px solid #ff66b2;
+    background-color: #fff; /* Set a white background for the registration container */
+    padding: 35px; /* Add padding inside the container */
+    max-width: 650px; /* Set a maximum width */
+    margin: 40px auto; /* Center the container with auto margins */
+    border-radius: 16px; /* Round the corners of the container */
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1); /* Add a soft shadow around the container */
+    border-top: 5px solid #ff66b2; /* Add a pink border on top */
 }
 
 /* Fields container */
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 20px; /* Add space between form groups */
 }
 
 .form-group label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 6px;
-    color: #333;
-    font-size: 15px;
+    display: block; /* Make label a block element */
+    font-weight: bold; /* Bold label text */
+    margin-bottom: 6px; /* Space below label */
+    color: #333; /* Dark color for label text */
+    font-size: 15px; /* Set font size for the label */
 }
 
 .form-group input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 15px;
-    transition: border-color 0.3s;
+    width: 100%; /* Make the input field span full width */
+    padding: 12px; /* Add padding inside input field */
+    border: 1px solid #ccc; /* Set light border color */
+    border-radius: 6px; /* Round corners of the input field */
+    font-size: 15px; /* Set font size for input */
+    transition: border-color 0.3s; /* Smooth border color transition on focus */
 }
 
 .form-group input:focus {
-    border-color: #ff66b2;
-    outline: none;
+    border-color: #ff66b2; /* Change border color when input is focused */
+    outline: none; /* Remove outline when focused */
+}
+
+/* Container for heading and button */
+.header-container {
+    display: flex; /* Use flexbox for layout */
+    justify-content: space-between; /* Space out the heading and button */
+    align-items: center; /* Vertically center both items */
+    margin-bottom: 20px; /* Add space below the header */
+}
+
+/* Create a button-like style for the 'Add Expense' link */
+.btn-create {
+    background-color: #7b2ff7; /* Purple background */
+    color: white; /* White text color */
+    font-size: 16px; /* Set font size */
+    font-weight: bold; /* Make the text bold */
+    padding: 6px 14px; /* Padding around the text */
+    border-radius: 8px; /* Round corners of the button */
+    text-decoration: none; /* Remove underline from the link */
+    transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transitions */
+}
+
+/* Hover effect for the create button */
+.btn-create:hover {
+    background-color: #ff66b2; /* Change background color to a lighter shade of pink on hover */
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
 }
 
 /* Responsive navbar */
 @media (max-width: 768px) {
     .navbar-brand {
-        font-size: 24px;
+        font-size: 24px; /* Reduce the brand font size on smaller screens */
     }
     .nav-link {
-        margin-left: 10px;
-        font-size: 14px;
+        margin-left: 10px; /* Reduce left margin for nav links */
+        font-size: 14px; /* Reduce font size for nav links */
     }
 }

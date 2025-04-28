@@ -41,8 +41,13 @@ def logout_view(request):
 
 @login_required
 def dashboard(request):
-    expenses = Expense.objects.filter(user=request.user)
-    total_expense = sum(exp.amount for exp in expenses)
+    if request.user.is_staff:
+        expenses = Expense.objects.all()
+        total_expense = sum(exp.amount for exp in expenses)
+    else:
+        expenses = Expense.objects.filter(user=request.user)
+        total_expense = sum(exp.amount for exp in expenses)
+
     return render(
         request,
         "expenses/dashboard.html",
