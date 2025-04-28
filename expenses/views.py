@@ -45,7 +45,7 @@ def dashboard(request):
     total_expense = sum(exp.amount for exp in expenses)
     return render(
         request,
-        "dashboard.html",
+        "expenses/dashboard.html",
         {"expenses": expenses, "total_expense": total_expense},
     )
 
@@ -61,13 +61,13 @@ def add_expense(request):
             return redirect("dashboard")
     else:
         form = ExpenseForm()
-    return render(request, "add_expense.html", {"form": form})
+    return render(request, "expenses/add_expense.html", {"form": form})
 
 
 @login_required
 def view_expenses(request):
     expenses = Expense.objects.filter(user=request.user)
-    return render(request, "view_expenses.html", {"expenses": expenses})
+    return render(request, "expenses/view_expenses.html", {"expenses": expenses})
 
 
 @login_required
@@ -78,7 +78,7 @@ def report(request):
     monthly_expenses = expenses.filter(date__month=today.month)
     return render(
         request,
-        "report.html",
+        "expenses/report.html",
         {
             "weekly_expenses": weekly_expenses,
             "monthly_expenses": monthly_expenses,
