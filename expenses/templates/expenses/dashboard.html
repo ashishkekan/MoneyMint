@@ -1,43 +1,96 @@
 {% extends 'expenses/base.html' %}
-
 {% block content %}
 <div class="container">
     <h2>Welcome, {{ user.username }}!</h2>
-
-    {% if user.is_staff %}
-        <h4 class="mt-4" style="text-align: center;">Expenses of All Users</h4>
-    {% else %}
-        <h4>Total Expenses: ₹{{ total_expense }}</h4>
+    {% if budget_alert %}
+        <div class="alert alert-warning">Warning: You are approaching your {{ budget.period }} budget limit!</div>
     {% endif %}
     
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Total Expenses</h5>
+                    <p>{{ user.profile.preferred_currency }} {{ total_expense }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Budget</h5>
+                    <p>{{ user.profile.preferred_currency }} {{ budget.amount|default:"Not set" }}</p>
+                    <a href="{% url 'set_budget' %}" class="btn btn-sm btn-outline-primary">Set Budget</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Profile</h5>
+                    <p>Update your preferences</p>
+                    <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">Edit Profile</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <h5 class="mt-4">Recent Expenses:</h5>
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th scope="col">Amount</th>
-                <th scope="col">Description</th>
-                <th scope="col">Date</th>
-                {% if user.is_staff %}
-                    <th scope="col">User</th>
-                {% endif %}
+                <th>Amount ({{ user.profile.preferred_currency }})</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Date</th>
             </tr>
         </thead>
         <tbody>
             {% for expense in expenses %}
             <tr>
-                <td>₹{{ expense.amount }}</td>
+                <td>{{ expense.amount }}</td>
                 <td>{{ expense.description }}</td>
+                <td>{{ expense.category.name|default:"Uncategorized" }}</td>
                 <td><span class="badge bg-primary rounded-pill">{{ expense.date }}</span></td>
-                {% if user.is_staff %}
-                    <td><span class="badge bg-secondary rounded-pill">{{ expense.user.username }}</span></td>
-                {% endif %}
             </tr>
             {% empty %}
             <tr>
-                <td colspan="{% if user.is_staff %}4{% else %}3{% endif %}">No expenses yet.</td>
+                <td colspan="4">No expenses yet.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    <h5 class="mt-4">Category Summary:</h5>
+    <canvas id="categoryChart"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById('categoryChart').getContext('2d');
+        var categoryChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: [{% for cat in category_summary %}'{{ cat.category__name|default:"Uncategorized" }}',{% endfor %}],
+                datasets: [{
+                    label: 'Category Distribution',
+                    data: [{% for cat in category_summary %}{{ cat.total }},{% endfor %}],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(153, 102, 255, 0.6)',
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            }
+        });
+    </script>
 </div>
 {% endblock %}

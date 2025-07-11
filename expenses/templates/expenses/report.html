@@ -1,22 +1,64 @@
 {% extends 'expenses/base.html' %}
-
 {% block content %}
 <div class="container mt-1">
-    <h2 class="text-center">Weekly Expenses Chart</h2>
-    <canvas id="expenseChart"></canvas>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <h2 class="text-center">Expense Reports</h2>
+    <div class="row">
+        {% for period, expenses in time_frames.items %}
+        <div class="col-md-4">
+            <h4>{{ period|title }} Expenses</h4>
+            <canvas id="{{ period }}Chart"></canvas>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+                var ctx = document.getElementById('{{ period }}Chart').getContext('2d');
+                var {{ period }}Chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: [{% for exp in expenses %}'{{ exp.date }}',{% endfor %}],
+                        datasets: [{
+                            label: '{{ period|title }} Expenses',
+                            data: [{% for exp in expenses %}{{ exp.amount }},{% endfor %}],
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            </script>
+        </div>
+        {% endfor %}
+    </div>
+    <h4 class="mt-4">Category Summary</h4>
+    <canvas id="categorySummaryChart"></canvas>
     <script>
-        var ctx = document.getElementById('expenseChart').getContext('2d');
-        var expenseChart = new Chart(ctx, {
-            type: 'bar',
+        var ctx = document.getElementById('categorySummaryChart').getContext('2d');
+        var categorySummaryChart = new Chart(ctx, {
+            type: 'pie',
             data: {
-                labels: [{% for exp in weekly_expenses %}'{{ exp.date }}',{% endfor %}],
+                labels: [{% for cat in category_summary %}'{{ cat.category__name|default:"Uncategorized" }}',{% endfor %}],
                 datasets: [{
-                    label: 'Weekly Expenses',
-                    data: [{% for exp in weekly_expenses %}{{ exp.amount }},{% endfor %}],
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                    label: 'Category Distribution',
+                    data: [{% for cat in category_summary %}{{ cat.total }},{% endfor %}],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(153, 102, 255, 0.6)',
+                    ]
                 }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
             }
         });
     </script>

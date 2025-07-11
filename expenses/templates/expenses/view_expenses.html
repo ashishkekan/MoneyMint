@@ -5,11 +5,22 @@
         <h2>All Expenses</h2>
         <a href="{% url 'add_expense' %}" class="btn-create">+</a>
     </div>
+    <div class="mb-3">
+        <form method="get">
+            <select name="category" class="form-select" onchange="this.form.submit()">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                <option value="{{ category.name }}" {% if category.name == selected_category %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>Amount (₹)</th>
+                <th>Amount ({{ user.profile.preferred_currency }})</th>
                 <th>Description</th>
+                <th>Category</th>
                 <th>Date</th>
             </tr>
         </thead>
@@ -18,11 +29,12 @@
             <tr>
                 <td>{{ expense.amount }}</td>
                 <td>{{ expense.description }}</td>
+                <td>{{ expense.category.name|default:"Uncategorized" }}</td>
                 <td>{{ expense.date }}</td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="3">No expenses found.</td>
+                <td colspan="4">No expenses found.</td>
             </tr>
             {% endfor %}
         </tbody>
