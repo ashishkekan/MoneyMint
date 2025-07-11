@@ -14,7 +14,8 @@ body.dark-mode {
 
 body.dark-mode .register-container,
 body.dark-mode .card,
-body.dark-mode .table {
+body.dark-mode .table,
+body.dark-mode .list-group {
     background: #2c2c2c;
     color: #ffffff;
 }
@@ -132,12 +133,41 @@ body.dark-mode .form-group select:focus {
     transform: scale(1.05);
 }
 
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.progress {
+    height: 20px;
+    border-radius: 10px;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #c6a7ff, #ff66b2);
+}
+
+.graph-size-toggle .btn {
+    margin-right: 10px;
+}
+
+.list-group-item {
+    border-radius: 8px;
+    margin-bottom: 5px;
+}
+
 @media (max-width: 768px) {
     .navbar-brand {
         font-size: 24px;
     }
     .nav-link {
         margin-left: 10px;
+        font-size: 14px;
+    }
+    .graph-size-toggle {
+        text-align: center;
+    }
+    .card, .list-group-item {
         font-size: 14px;
     }
 }

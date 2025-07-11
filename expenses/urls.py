@@ -15,4 +15,5 @@ urlpatterns = [
     path("budget/", views.set_budget, name="set_budget"),
     path("export/json/", views.export_json, name="export_json"),
     path("export/csv/", views.export_csv, name="export_csv"),
+    path("contact/", views.contact, name="contact"),
 ]

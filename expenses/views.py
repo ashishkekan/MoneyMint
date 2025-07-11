@@ -63,24 +63,28 @@ def dashboard(request):
     total_expense = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
     categories = Category.objects.all()
     budget = Budget.objects.filter(user=request.user).first()
+    budget_progress = (total_expense / budget.amount * 100) if budget and budget.amount > 0 else 0
     budget_alert = budget and total_expense > budget.amount * Decimal('0.9')
 
-    recent_expenses = expenses.order_by('-date')[:5]
+    recent_expenses = expenses.filter(date__gte=datetime.date.today() - datetime.timedelta(days=30)).order_by('date')
     category_summary = expenses.values('category__name').annotate(
         total=Sum('amount'),
         count=Count('id')
-    )
+    ).order_by('-total')
 
     return render(
         request,
         "expenses/dashboard.html",
         {
-            "expenses": recent_expenses,
+            "expenses": expenses.order_by('-date')[:5],
             "total_expense": total_expense,
             "categories": categories,
             "category_summary": category_summary,
             "budget": budget,
+            "budget_progress": round(budget_progress, 2),
             "budget_alert": budget_alert,
+            "recent_expenses": recent_expenses,
+            "form": ExpenseForm(),
         },
     )
 
@@ -122,26 +126,55 @@ def report(request):
     expenses = Expense.objects.filter(user=request.user)
     today = datetime.date.today()
     time_frames = {
-        'weekly': expenses.filter(date__gte=today - datetime.timedelta(days=7)),
-        'monthly': expenses.filter(date__month=today.month),
-        'yearly': expenses.filter(date__year=today.year),
+        'weekly': {
+            'expenses': expenses.filter(date__gte=today - datetime.timedelta(days=7)).order_by('-amount'),
+            'total': expenses.filter(date__gte=today - datetime.timedelta(days=7)).aggregate(Sum('amount'))['amount__sum'] or 0,
+            'count': expenses.filter(date__gte=today - datetime.timedelta(days=7)).count(),
+            'top_expense': expenses.filter(date__gte=today - datetime.timedelta(days=7)).first(),
+        },
+        'monthly': {
+            'expenses': expenses.filter(date__month=today.month).order_by('-amount'),
+            'total': expenses.filter(date__month=today.month).aggregate(Sum('amount'))['amount__sum'] or 0,
+            'count': expenses.filter(date__month=today.month).count(),
+            'top_expense': expenses.filter(date__month=today.month).first(),
+        },
+        'yearly': {
+            'expenses': expenses.filter(date__year=today.year).order_by('-amount'),
+            'total': expenses.filter(date__year=today.year).aggregate(Sum('amount'))['amount__sum'] or 0,
+            'count': expenses.filter(date__year=today.year).count(),
+            'top_expense': expenses.filter(date__year=today.year).first(),
+        },
     }
     category_summary = expenses.values('category__name').annotate(
         total=Sum('amount')
-    )
+    ).order_by('-total')
+    categories = Category.objects.all()
+    selected_category = request.GET.get('category')
+    if selected_category:
+        time_frames = {
+            period: {
+                'expenses': data['expenses'].filter(category__name=selected_category),
+                'total': data['expenses'].filter(category__name=selected_category).aggregate(Sum('amount'))['amount__sum'] or 0,
+                'count': data['expenses'].filter(category__name=selected_category).count(),
+                'top_expense': data['expenses'].filter(category__name=selected_category).first(),
+            } for period, data in time_frames.items()
+        }
+        category_summary = category_summary.filter(category__name=selected_category)
     return render(
         request,
         "expenses/report.html",
         {
             "time_frames": time_frames,
             "category_summary": category_summary,
+            "categories": categories,
+            "selected_category": selected_category,
         },
     )
 
 
 @login_required
 def profile(request):
-    profile = Profile.objects.get(user=request.user)
+    profile, created = Profile.objects.get_or_create(user=request.user)
     if request.method == "POST":
         form = ProfileForm(request.POST, instance=profile)
         if form.is_valid():
@@ -194,3 +227,7 @@ def export_csv(request):
     for exp in expenses:
         writer.writerow([exp.amount, exp.description, exp.date, exp.category.name if exp.category else "Uncategorized"])
     return response
+
+
+def contact(request):
+    return render(request, "expenses/contact.html")
