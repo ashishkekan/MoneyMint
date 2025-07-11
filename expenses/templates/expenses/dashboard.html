@@ -1,43 +1,200 @@
 {% extends 'expenses/base.html' %}
-
 {% block content %}
 <div class="container">
-    <h2>Welcome, {{ user.username }}!</h2>
-
-    {% if user.is_staff %}
-        <h4 class="mt-4" style="text-align: center;">Expenses of All Users</h4>
-    {% else %}
-        <h4>Total Expenses: ₹{{ total_expense }}</h4>
+    <h2 class="mb-4">Welcome, {{ user.username }}!</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    {% if budget_alert %}
+        <div class="alert alert-warning">Warning: You are approaching your {{ budget.period }} budget limit!</div>
     {% endif %}
     
-    <h5 class="mt-4">Recent Expenses:</h5>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th scope="col">Amount</th>
-                <th scope="col">Description</th>
-                <th scope="col">Date</th>
-                {% if user.is_staff %}
-                    <th scope="col">User</th>
-                {% endif %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for expense in expenses %}
-            <tr>
-                <td>₹{{ expense.amount }}</td>
-                <td>{{ expense.description }}</td>
-                <td><span class="badge bg-primary rounded-pill">{{ expense.date }}</span></td>
-                {% if user.is_staff %}
-                    <td><span class="badge bg-secondary rounded-pill">{{ expense.user.username }}</span></td>
-                {% endif %}
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="{% if user.is_staff %}4{% else %}3{% endif %}">No expenses yet.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Total Expenses</h5>
+                    <p>{{ user.profile.preferred_currency }} {{ total_expense }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Budget Progress</h5>
+                    {% if budget %}
+                        <p>{{ user.profile.preferred_currency }} {{ total_expense }} / {{ budget.amount }}</p>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: {{ budget_progress }}%;" aria-valuenow="{{ budget_progress }}" aria-valuemin="0" aria-valuemax="100">{{ budget_progress }}%</div>
+                        </div>
+                    {% else %}
+                        <p>Not set</p>
+                    {% endif %}
+                    <a href="{% url 'set_budget' %}" class="btn btn-sm btn-outline-primary mt-2">Set Budget</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Profile</h5>
+                    <p>Update your preferences</p>
+                    <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary">Edit Profile</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h5>Quick Add Expense</h5>
+            <form method="post" action="{% url 'add_expense' %}">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        {{ form.amount }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.description }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.category }}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100" style="background: linear-gradient(90deg, #c6a7ff, #ff66b2); border: none;">Add Expense</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h5>Top Spending Categories</h5>
+            <ul class="list-group">
+                {% for cat in category_summary|slice:":3" %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ cat.category__name|default:"Uncategorized" }}
+                    <span class="badge bg-primary rounded-pill">{{ user.profile.preferred_currency }} {{ cat.total }}</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item">No categories yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <h5>Recent Expenses</h5>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Amount ({{ user.profile.preferred_currency }})</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr>
+                        <td>{{ expense.amount }}</td>
+                        <td>{{ expense.description }}</td>
+                        <td>{{ expense.category.name|default:"Uncategorized" }}</td>
+                        <td><span class="badge bg-primary rounded-pill">{{ expense.date }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">No expenses yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6 mb-4">
+            <h5>Expense Trend (Last 30 Days)</h5>
+            <div style="max-width: 400px; margin: 0 auto;">
+                <canvas id="trendChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h5>Category Summary</h5>
+            <div id="categoryChartContainer" style="max-width: 300px; margin: 0 auto;">
+                <canvas id="categoryChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Trend Chart
+        var trendCtx = document.getElementById('trendChart').getContext('2d');
+        var trendChart = new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: [{% for exp in recent_expenses %}'{{ exp.date }}',{% endfor %}],
+                datasets: [{
+                    label: 'Expenses (Last 30 Days)',
+                    data: [{% for exp in recent_expenses %}{{ exp.amount }},{% endfor %}],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    fill: false,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Category Chart
+        var categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        var categoryChart = new Chart(categoryCtx, {
+            type: 'pie',
+            data: {
+                labels: [{% for cat in category_summary %}'{{ cat.category__name|default:"Uncategorized" }}',{% endfor %}],
+                datasets: [{
+                    label: 'Category Distribution',
+                    data: [{% for cat in category_summary %}{{ cat.total }},{% endfor %}],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(153, 102, 255, 0.6)',
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 </div>
 {% endblock %}

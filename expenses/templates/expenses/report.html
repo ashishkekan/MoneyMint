@@ -1,24 +1,202 @@
 {% extends 'expenses/base.html' %}
-
 {% block content %}
 <div class="container mt-1">
-    <h2 class="text-center">Weekly Expenses Chart</h2>
-    <canvas id="expenseChart"></canvas>
+    <h2 class="text-center mb-4">Expense Reports</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5>Period Comparison</h5>
+            <div style="max-width: 600px; margin: 0 auto;">
+                <canvas id="comparisonChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for period, data in time_frames.items %}
+        <div class="col-md-4 mb-4">
+            <h5>{{ period|title }} Expenses</h5>
+            <p><strong>Top Expense:</strong> {% if data.expenses %} {{ data.top_expense.amount }} - {{ data.top_expense.description }} ({{ data.top_expense.date }}) {% else %} None {% endif %}</p>
+            <div style="max-width: 300px; margin: 0 auto;">
+                <canvas id="{{ period }}Chart" height="150"></canvas>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h5>Category Summary</h5>
+            <div class="graph-size-toggle mb-3">
+                <button class="btn btn-sm btn-outline-secondary" onclick="resizeCategoryGraph('small')">Small</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="resizeCategoryGraph('large')">Large</button>
+            </div>
+            <div id="categoryChartContainer" style="max-width: 300px; margin: 0 auto;">
+                <canvas id="categorySummaryChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <h5>Expense Summary Table</h5>
+            <form method="get" class="mb-3">
+                <select name="category" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.name }}" {% if category.name == selected_category %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Total ({{ user.profile.preferred_currency }})</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for period, data in time_frames.items %}
+                    <tr>
+                        <td>{{ period|title }}</td>
+                        <td>{{ data.total|default:"0" }}</td>
+                        <td>{{ data.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a href="{% url 'export_csv' %}" class="btn btn-outline-primary">Export as CSV</a>
+            <a href="{% url 'export_json' %}" class="btn btn-outline-primary">Export as JSON</a>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        var ctx = document.getElementById('expenseChart').getContext('2d');
-        var expenseChart = new Chart(ctx, {
+        // Comparison Chart
+        var comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
+        var comparisonChart = new Chart(comparisonCtx, {
             type: 'bar',
             data: {
-                labels: [{% for exp in weekly_expenses %}'{{ exp.date }}',{% endfor %}],
+                labels: ['Weekly', 'Monthly', 'Yearly'],
                 datasets: [{
-                    label: 'Weekly Expenses',
-                    data: [{% for exp in weekly_expenses %}{{ exp.amount }},{% endfor %}],
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                    label: 'Total Expenses',
+                    data: [
+                        {{ time_frames.weekly.total|default:"0" }},
+                        {{ time_frames.monthly.total|default:"0" }},
+                        {{ time_frames.yearly.total|default:"0" }}
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)'
+                    ]
                 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
             }
         });
+
+        // Period Charts
+        {% for period, data in time_frames.items %}
+        var {{ period }}Ctx = document.getElementById('{{ period }}Chart').getContext('2d');
+        var {{ period }}Chart = new Chart({{ period }}Ctx, {
+            type: 'bar',
+            data: {
+                labels: [{% for exp in data.expenses %}'{{ exp.date }}',{% endfor %}],
+                datasets: [{
+                    label: '{{ period|title }} Expenses',
+                    data: [{% for exp in data.expenses %}{{ exp.amount }},{% endfor %}],
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        {% endfor %}
+
+        // Category Summary Chart
+        var categoryCtx = document.getElementById('categorySummaryChart').getContext('2d');
+        var categorySummaryChart = new Chart(categoryCtx, {
+            type: 'pie',
+            data: {
+                labels: [{% for cat in category_summary %}'{{ cat.category__name|default:"Uncategorized" }}',{% endfor %}],
+                datasets: [{
+                    label: 'Category Distribution',
+                    data: [{% for cat in category_summary %}{{ cat.total }},{% endfor %}],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(153, 102, 255, 0.6)',
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        function resizeCategoryGraph(size) {
+            const container = document.getElementById('categoryChartContainer');
+            if (size === 'small') {
+                container.style.maxWidth = '300px';
+                container.querySelector('canvas').height = 150;
+            } else {
+                container.style.maxWidth = '500px';
+                container.querySelector('canvas').height = 250;
+            }
+            categorySummaryChart.resize();
+        }
     </script>
 </div>
 {% endblock %}
